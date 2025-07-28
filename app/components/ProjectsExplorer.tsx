@@ -15,7 +15,7 @@ import {
   Box,
   rem,
 } from '@mantine/core';
-import { IconSearch, IconUsers, IconFileText, IconStar, IconBrandGithub, IconEdit } from '@tabler/icons-react';
+import { IconSearch, IconUsers, IconFileText, IconStar, IconBrandGithub, IconEdit, IconUsersGroup, IconGitFork } from '@tabler/icons-react';
 
 interface Project {
   id: string;
@@ -127,19 +127,25 @@ export function ProjectsExplorer() {
               Explore Apps
             </Title>
             <Text size="lg" c="dimmed" maw={600} mx="auto">
-              Discover apps built by the BaseBase community. Try any app and make it your own.
+              Discover apps built by the BaseBase community. Try any app and then click the "edit this app" button to start improving it.
             </Text>
           </Box>
 
           <Box maw={500} mx="auto">
-            <TextInput
-              size="lg"
-              placeholder="Search apps..."
-              leftSection={<IconSearch style={{ width: rem(20), height: rem(20) }} />}
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.currentTarget.value)}
-              radius="xl"
-            />
+            <Group gap="md" align="end">
+              <TextInput
+                size="lg"
+                placeholder="Search apps..."
+                leftSection={<IconSearch style={{ width: rem(20), height: rem(20) }} />}
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.currentTarget.value)}
+                radius="xl"
+                style={{ flex: 1 }}
+              />
+              <Button size="lg" radius="xl">
+                Create App
+              </Button>
+            </Group>
           </Box>
 
           <Grid>
@@ -174,25 +180,40 @@ export function ProjectsExplorer() {
                       </Box>
 
                       <Box>
-                        <Group justify="space-between" gap="xs" mb="md" wrap="nowrap">
-                          <Group gap="xs" style={{ minWidth: 0, flex: 1 }}>
-                            <IconUsers style={{ width: rem(14), height: rem(14), flexShrink: 0 }} />
-                            <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+                        <Group justify="space-between" gap="md" mb="md">
+                          <Stack align="center" gap="xs" style={{ flex: 1 }}>
+                            <Text size="lg" fw={700} lh={1}>
                               {project.users.toLocaleString()}
                             </Text>
-                          </Group>
-                          <Group gap="xs" style={{ minWidth: 0, flex: 1 }}>
-                            <StatIcon style={{ width: rem(14), height: rem(14), flexShrink: 0 }} />
-                            <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
-                              {getStatLabel(project).replace(/\s+/g, ' ').split(' ')[0]}
+                            <Group gap={4} align="center">
+                              <IconUsers style={{ width: rem(12), height: rem(12) }} />
+                              <Text size="xs" c="dimmed" tt="uppercase" fw={500}>
+                                users
+                              </Text>
+                            </Group>
+                          </Stack>
+                          <Stack align="center" gap="xs" style={{ flex: 1 }}>
+                            <Text size="lg" fw={700} lh={1}>
+                              {Math.floor(project.users * 0.15)}
                             </Text>
-                          </Group>
-                          <Group gap="xs" style={{ minWidth: 0, flex: 1 }}>
-                            <IconStar style={{ width: rem(14), height: rem(14), flexShrink: 0 }} />
-                            <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+                            <Group gap={4} align="center">
+                              <IconUsersGroup style={{ width: rem(12), height: rem(12) }} />
+                              <Text size="xs" c="dimmed" tt="uppercase" fw={500}>
+                                contributors
+                              </Text>
+                            </Group>
+                          </Stack>
+                          <Stack align="center" gap="xs" style={{ flex: 1 }}>
+                            <Text size="lg" fw={700} lh={1}>
                               {project.forks}
                             </Text>
-                          </Group>
+                            <Group gap={4} align="center">
+                              <IconGitFork style={{ width: rem(12), height: rem(12) }} />
+                              <Text size="xs" c="dimmed" tt="uppercase" fw={500}>
+                                forks
+                              </Text>
+                            </Group>
+                          </Stack>
                         </Group>
 
                         <Group gap="xs" style={{ display: 'flex', width: '100%' }}>
@@ -228,12 +249,6 @@ export function ProjectsExplorer() {
               );
             })}
           </Grid>
-
-          <Box ta="center" mt="xl">
-            <Button size="lg" radius="xl">
-              Create Your App
-            </Button>
-          </Box>
         </Stack>
       </Container>
 

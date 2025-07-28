@@ -184,18 +184,18 @@ export default function HomePage() {
   const steps = [
     {
       number: '1',
-      title: 'Create or Fork',
-      description: 'Start fresh or fork an existing project. Inherit all the data and users from day one.',
+      title: 'Create or Edit',
+      description: 'Start fresh or just contribute to an existing project. Inherit all the data and users from day one.',
     },
     {
       number: '2',
-      title: 'Code & Extend',
-      description: 'Use our web IDE to build with NextJS, BaseBase SDK, and Mantine. Add new fields and collections as needed.',
+      title: 'Vibe Code Together',
+      description: 'Use our AI coding assistant to turn your ideas into real, interactive features. Add new fields and collections as needed.',
     },
     {
       number: '3',
       title: 'Deploy Instantly',
-      description: 'Your app goes live automatically. Share the link and start growing your community immediately.',
+      description: 'Your app goes live automatically - for you and for everyone! Share the link and start growing your community immediately.',
     },
   ];
 
@@ -233,7 +233,7 @@ export default function HomePage() {
 
             <Group gap="md">
               <Button size="xl" radius="xl" rightSection={<IconArrowRight size={20} />}>
-                Create Project
+                Create App
               </Button>
               <Button size="xl" variant="outline" radius="xl">
                 View Docs

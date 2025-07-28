@@ -28,6 +28,19 @@ export const theme = createTheme({
       "#3333bb",
       "#222299",
     ],
+    // Logo purple color - centralized definition
+    logoPurple: [
+      "#f3f0ff",
+      "#e5d3ff",
+      "#d0bfff",
+      "#b197fc",
+      "#9775fa",
+      "#845ef7",
+      "#7950f2",
+      "#7048e8",
+      "#6741d9",
+      "#5f3dc4",
+    ],
     // Better grays for modern UI
     gray: [
       "#fafafa",

@@ -76,8 +76,7 @@ export function Navigation({ onAuthClick, isAuthenticated, userEmail }: Navigati
               <Text
                 size="xl"
                 fw={700}
-                variant="gradient"
-                gradient={{ from: 'violet', to: 'blue', deg: 45 }}
+                c="logoPurple.6"
                 style={{ cursor: 'pointer' }}
               >
                 {appConfig.name}
