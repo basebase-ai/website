@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import {
   Group,
   Button,
@@ -16,10 +17,10 @@ import { appConfig } from '../../config';
 interface NavigationProps {
   onAuthClick: () => void;
   isAuthenticated: boolean;
-  userEmail?: string;
+  userName?: string;
 }
 
-export function Navigation({ onAuthClick, isAuthenticated, userEmail }: NavigationProps) {
+export function Navigation({ onAuthClick, isAuthenticated, userName }: NavigationProps) {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
 
   const navLinks = [
@@ -72,12 +73,37 @@ export function Navigation({ onAuthClick, isAuthenticated, userEmail }: Navigati
         <Container size="xl" h="100%">
           <Group justify="space-between" h="100%">
             {/* Logo */}
-            <Group>
+            <Group gap="sm" style={{ cursor: 'pointer' }}>
+              <Box style={{ position: 'relative', width: 32, height: 32 }}>
+                <Image
+                  src="/basebase-black-32.svg"
+                  alt="BaseBase Logo"
+                  width={32}
+                  height={32}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                  }}
+                  className="logo-light"
+                />
+                <Image
+                  src="/basebase-white-32.svg"
+                  alt="BaseBase Logo"
+                  width={32}
+                  height={32}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                  }}
+                  className="logo-dark"
+                />
+              </Box>
               <Text
                 size="xl"
                 fw={700}
                 c="logoPurple.6"
-                style={{ cursor: 'pointer' }}
               >
                 {appConfig.name}
               </Text>
@@ -93,7 +119,7 @@ export function Navigation({ onAuthClick, isAuthenticated, userEmail }: Navigati
               {isAuthenticated ? (
                 <Group>
                   <Text size="sm" c="dimmed">
-                    {userEmail}
+                    {userName}
                   </Text>
                   <Button variant="outline" size="sm" onClick={onAuthClick}>
                     Sign Out
@@ -128,7 +154,7 @@ export function Navigation({ onAuthClick, isAuthenticated, userEmail }: Navigati
             {isAuthenticated ? (
               <Stack gap="sm">
                 <Text size="sm" c="dimmed">
-                  {userEmail}
+                  {userName}
                 </Text>
                 <Button variant="outline" fullWidth onClick={onAuthClick}>
                   Sign Out
@@ -144,6 +170,20 @@ export function Navigation({ onAuthClick, isAuthenticated, userEmail }: Navigati
       </Drawer>
 
       <style jsx global>{`
+        .logo-light {
+          display: block;
+        }
+        .logo-dark {
+          display: none;
+        }
+        
+        [data-mantine-color-scheme="dark"] .logo-light {
+          display: none;
+        }
+        [data-mantine-color-scheme="dark"] .logo-dark {
+          display: block;
+        }
+        
         .nav-link:hover {
           color: var(--mantine-color-violet-6) !important;
           background-color: var(--mantine-color-violet-0);

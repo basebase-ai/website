@@ -204,7 +204,7 @@ export default function HomePage() {
       <Navigation 
         onAuthClick={handleAuthClick}
         isAuthenticated={authState.isAuthenticated}
-        userEmail={authState.user?.phone}
+        userName={authState.user?.name}
       />
 
       {/* Hero Section */}
