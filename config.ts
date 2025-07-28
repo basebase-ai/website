@@ -7,24 +7,33 @@
 
 export const appConfig = {
   /** Application name displayed throughout the UI */
-  name: "Welcome to BaseBase!",
+  name: "BaseBase",
 
   /** Short description for metadata and about sections */
-  description: "BaseBase starter project.",
+  description:
+    "A powerful new platform where communities can develop real production apps by vibe coding together, in real time.",
 
   /** Default project ID for authentication (can be overridden by users) */
-  defaultProjectId: "test_project",
+  defaultProjectId: "basebase_platform",
 
   /** Application URL (update for production) */
-  url: "https://your-app.com",
+  url: "https://basebase.ai",
 
   /** Additional metadata */
   metadata: {
     /** SEO keywords */
-    keywords: ["basebase", "authentication", "starter", "nextjs", "mantine"],
+    keywords: [
+      "basebase",
+      "collaborative coding",
+      "real-time development",
+      "community apps",
+      "vibe coding",
+      "nextjs",
+      "mantine",
+    ],
 
     /** Author information */
-    author: "Your Name",
+    author: "BaseBase Team",
 
     /** App version */
     version: "1.0.0",
