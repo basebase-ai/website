@@ -160,14 +160,14 @@ export default function HomePage() {
 
   const features = [
     {
-      icon: IconBolt,
-      title: 'No Experience Needed',
-      description: 'Jump right in with our AI coding assistant. No prior programming knowledge required - just bring your ideas and creativity.',
-    },
-    {
       icon: IconWorld,
       title: 'Build It Together',
       description: 'Every user is a developer. Radical collaboration where communities design, build, and evolve apps together in real time.',
+    },
+    {
+      icon: IconBolt,
+      title: 'No Experience Needed',
+      description: 'Jump right in with our AI coding assistant. No prior programming knowledge required - just bring your ideas and creativity.',
     },
     {
       icon: IconRocket,
