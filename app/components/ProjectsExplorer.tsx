@@ -121,7 +121,7 @@ export function ProjectsExplorer() {
               Explore Apps
             </Title>
             <Text size="lg" c="dimmed" maw={600} mx="auto">
-              Discover apps built by the BaseBase community. Try any app and then click the "edit this app" button to start improving it.
+              Discover apps built by the BaseBase community. Try any app and then click the &quot;edit this app&quot; button to start improving it.
             </Text>
           </Box>
 

@@ -160,24 +160,24 @@ export default function HomePage() {
 
   const features = [
     {
-      icon: IconRocket,
-      title: 'Launch with Users',
-      description: 'Start with an existing community instead of building from zero. Shared data means instant social graphs and content.',
-    },
-    {
       icon: IconBolt,
-      title: 'Rapid Prototyping',
-      description: 'Web-based IDE with AI assistance. Dynamic schemas that evolve with your ideas. From concept to live app in minutes.',
-    },
-    {
-      icon: IconRefresh,
-      title: 'Easy Forking',
-      description: 'Clone any project and make it your own. Open source by default with shared infrastructure and data.',
+      title: 'No Experience Needed',
+      description: 'Jump right in with our AI coding assistant. No prior programming knowledge required - just bring your ideas and creativity.',
     },
     {
       icon: IconWorld,
-      title: 'Auto-Hosting',
-      description: 'Every project gets instant deployment at basebase.ai/yourproject. No DevOps, no configuration, just code.',
+      title: 'Build It Together',
+      description: 'Every user is a developer. Radical collaboration where communities design, build, and evolve apps together in real time.',
+    },
+    {
+      icon: IconRocket,
+      title: 'Launch with Users',
+      description: 'Access live databases shared by other apps from day one. Start with an existing community instead of building from zero.',
+    },
+    {
+      icon: IconRefresh,
+      title: "It's Fun!",
+      description: 'Building apps should be joyful! Experience the thrill of creating something real with friends, seeing instant results, and growing together.',
     },
   ];
 
