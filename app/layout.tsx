@@ -6,10 +6,26 @@ import {
   mantineHtmlProps,
 } from "@mantine/core";
 import { theme } from "../theme";
+import { appConfig } from "../config";
 
 export const metadata = {
-  title: "Mantine Next.js template",
-  description: "I am using Mantine with Next.js!",
+  title: appConfig.name,
+  description: appConfig.description,
+  keywords: appConfig.metadata.keywords,
+  authors: [{ name: appConfig.metadata.author }],
+  creator: appConfig.metadata.author,
+  metadataBase: new URL(appConfig.url),
+  openGraph: {
+    title: appConfig.name,
+    description: appConfig.description,
+    url: appConfig.url,
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: appConfig.name,
+    description: appConfig.description,
+  },
 };
 
 export default function RootLayout({ children }: { children: any }) {
@@ -24,7 +40,9 @@ export default function RootLayout({ children }: { children: any }) {
         />
       </head>
       <body>
-        <MantineProvider theme={theme}>{children}</MantineProvider>
+        <MantineProvider theme={theme} defaultColorScheme="auto">
+          {children}
+        </MantineProvider>
       </body>
     </html>
   );
