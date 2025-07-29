@@ -7,7 +7,7 @@
 
 export const appConfig = {
   /** Application name displayed throughout the UI */
-  name: "BaseBase",
+  name: "Basebase",
 
   /** Short description for metadata and about sections */
   description:

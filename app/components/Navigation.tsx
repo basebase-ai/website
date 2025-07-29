@@ -25,7 +25,7 @@ export function Navigation({ onAuthClick, isAuthenticated, userName }: Navigatio
 
   const navLinks = [
     { label: 'Projects', href: '/projects' },
-    { label: 'Docs', href: '/docs' },
+    { label: 'Docs', href: 'https://github.com/basebase-ai/basebase-js' },
     { label: 'Community', href: '/community' },
   ];
 
@@ -36,6 +36,8 @@ export function Navigation({ onAuthClick, isAuthenticated, userName }: Navigatio
           key={link.label}
           component="a"
           href={link.href}
+          target={link.href.startsWith('http') ? '_blank' : undefined}
+          rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
           size="sm"
           fw={500}
           c="dimmed"
@@ -103,7 +105,7 @@ export function Navigation({ onAuthClick, isAuthenticated, userName }: Navigatio
               <Text
                 size="xl"
                 fw={700}
-                c="logoPurple.6"
+                c="bright"
               >
                 {appConfig.name}
               </Text>

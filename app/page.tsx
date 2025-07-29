@@ -244,26 +244,32 @@ export default function HomePage() {
         name: projectName.trim(),
         description: projectDescription.trim(),
         categories: categoriesArray,
+        githubUrl: githubUrl.trim(),
+        productionUrl: productionUrl.trim(),
         updatedAt: new Date(),
         users: 0,
         forks: 0,
-        ...(isEditMode ? {
-          githubUrl: githubUrl.trim(),
-          productionUrl: productionUrl.trim()
-        } : { 
+        ...(isEditMode ? {} : { 
           createdAt: new Date(),
           ownerId: authState.user?.id || '' 
         })
       };
 
+      // Debug logging for project creation/update
+      console.log('Creating/updating project with data:', projectData);
+      console.log('isEditMode:', isEditMode);
+      console.log('projectId:', projectId);
+
       if (isEditMode && editingProject) {
         // Update existing project
         const docRef = doc(db, `basebase/projects/${editingProject}`);
         await setDoc(docRef, projectData);
+        console.log('Project updated successfully:', editingProject);
       } else {
         // Create new project
         const docRef = doc(db, `basebase/projects/${projectId}`);
         await setDoc(docRef, projectData);
+        console.log('New project created successfully:', projectId);
       }
       
       // Success - close modal and refresh projects
@@ -374,11 +380,16 @@ export default function HomePage() {
               A powerful new platform where communities can develop real production apps by vibe coding together, in real time.
             </Text>
 
-            <Group gap="md">
+            <Group gap="md" justify="center">
               <Button size="xl" radius="xl" rightSection={<IconArrowRight size={20} />} onClick={handleCreateAppClick}>
                 Create App
               </Button>
-              <Button size="xl" variant="outline" radius="xl">
+              <Button 
+                size="xl" 
+                radius="xl" 
+                variant="outline" 
+                onClick={() => window.open('https://github.com/basebase-ai/basebase-js', '_blank')}
+              >
                 View Docs
               </Button>
             </Group>
@@ -602,24 +613,20 @@ export default function HomePage() {
             onChange={(event) => setProjectCategories(event.currentTarget.value)}
             description="Comma-separated list of categories (e.g. social, productivity, games)"
           />
-          {isEditMode && (
-            <>
-              <TextInput
-                label="GitHub URL"
-                placeholder="https://github.com/username/repo"
-                value={githubUrl}
-                onChange={(event) => setGithubUrl(event.currentTarget.value)}
-                description="Link to the project's GitHub repository"
-              />
-              <TextInput
-                label="Production URL"
-                placeholder="https://myapp.com"
-                value={productionUrl}
-                onChange={(event) => setProductionUrl(event.currentTarget.value)}
-                description="Link to the live/production version of the app"
-              />
-            </>
-          )}
+          <TextInput
+            label="GitHub URL"
+            placeholder="https://github.com/username/repo"
+            value={githubUrl}
+            onChange={(event) => setGithubUrl(event.currentTarget.value)}
+            description="Link to the project's GitHub repository (optional)"
+          />
+          <TextInput
+            label="Production URL"
+            placeholder="https://myapp.com"
+            value={productionUrl}
+            onChange={(event) => setProductionUrl(event.currentTarget.value)}
+            description="Link to the live/production version of the app (optional)"
+          />
           {createError && (
             <Alert color="red" variant="light">
               {createError}

@@ -19,13 +19,14 @@ import {
   Alert,
 } from '@mantine/core';
 import { IconSearch, IconUsers, IconFileText, IconStar, IconBrandGithub, IconEdit, IconUsersGroup, IconGitFork, IconAlertCircle, IconSettings } from '@tabler/icons-react';
-import { db, collection, getDocs } from 'basebase-js';
+import { getProjects } from 'basebase-js';
 
 interface Project {
   id: string;
   name: string;
   description: string;
   githubUrl?: string;
+  productionUrl?: string;
   users?: number;
   posts?: number;
   polls?: number;
@@ -77,34 +78,55 @@ export function ProjectsExplorer({ onCreateAppClick, onEditProject, authState, r
       setLoading(true);
       setError('');
       
-      // Fetch all documents from the basebase/projects collection
-      const projectsRef = collection(db, 'basebase/projects');
-      const snapshot = await getDocs(projectsRef);
+      // Fetch projects using the new unauthenticated endpoint
+      const projectsData = await getProjects();
       
-      const projectsData: Project[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        projectsData.push({
-          id: doc.id,
-          name: data.name || doc.id,
-          description: data.description || 'No description available',
-          githubUrl: data.githubUrl || data.github_url,
-          users: data.users || 0,
-          posts: data.posts,
-          polls: data.polls,
-          photos: data.photos,
-          jobs: data.jobs,
-          events: data.events,
-          reviews: data.reviews,
-          forks: data.forks || 0,
-          category: data.category || 'Uncategorized',
-          categories: data.categories || [],
-          ownerId: data.ownerId,
-          ...data // Include any additional fields
+      // Debug logging - see what we get from the API
+      console.log('Raw projects data from API:', projectsData);
+      console.log('Number of projects:', projectsData?.length);
+      if (projectsData?.length > 0) {
+        console.log('First project raw data:', projectsData[0]);
+        console.log('Available keys in first project:', Object.keys(projectsData[0]));
+      }
+      
+      // Transform the data to match our Project interface
+      const transformedProjects: Project[] = projectsData.map((project: any) => {
+        const transformed = {
+          id: project.id,
+          name: project.name || project.id,
+          description: project.description || 'No description available',
+          githubUrl: project.githubUrl || project.github_url,
+          productionUrl: project.productionUrl,
+          users: project.users || 0,
+          posts: project.posts,
+          polls: project.polls,
+          photos: project.photos,
+          jobs: project.jobs,
+          events: project.events,
+          reviews: project.reviews,
+          forks: project.forks || 0,
+          category: project.category || 'Uncategorized',
+          categories: project.categories || [],
+          ownerId: project.ownerId,
+          ...project // Include any additional fields
+        };
+        
+        // Debug logging for each transformed project
+        console.log(`Project ${project.id} transformation:`, {
+          original: project,
+          transformed: transformed,
+          hasId: !!transformed.id,
+          hasGithubUrl: !!transformed.githubUrl,
+          hasProductionUrl: !!transformed.productionUrl,
+          hasCategories: !!transformed.categories && transformed.categories.length > 0,
+          categoriesValue: transformed.categories
         });
+        
+        return transformed;
       });
       
-      setProjects(projectsData);
+      console.log('Final transformed projects:', transformedProjects);
+      setProjects(transformedProjects);
     } catch (err: any) {
       console.error('Error fetching projects:', err);
       setError(err.message || 'Failed to load projects');
@@ -216,9 +238,9 @@ export function ProjectsExplorer({ onCreateAppClick, onEditProject, authState, r
                     >
                       <Stack justify="space-between" h="100%">
                         <Box>
-                          <Group justify="space-between" mb="xs">
-                            <Group gap="xs" align="center">
-                              <Title order={4} size="h3">
+                          <Group justify="space-between" mb="xs" align="flex-start">
+                            <Group gap="xs" align="center" style={{ flex: 1, minWidth: 0 }}>
+                              <Title order={4} size="h3" style={{ wordBreak: 'break-word' }}>
                                 {project.name}
                               </Title>
                               {authState?.isAuthenticated && 
@@ -228,7 +250,7 @@ export function ProjectsExplorer({ onCreateAppClick, onEditProject, authState, r
                                   variant="subtle"
                                   size="xs"
                                   p={0}
-                                  style={{ width: rem(20), height: rem(20) }}
+                                  style={{ width: rem(20), height: rem(20), flexShrink: 0 }}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     onEditProject(project);
@@ -238,14 +260,16 @@ export function ProjectsExplorer({ onCreateAppClick, onEditProject, authState, r
                                 </Button>
                               )}
                             </Group>
-                            <Group gap="xs">
+                            <Group gap="xs" style={{ flexShrink: 0 }}>
                               {project.categories && project.categories.length > 0 ? (
-                                project.categories.map((category, index) => (
-                                  <Badge key={index} color="violet" variant="light" size="sm">
-                                    {category}
-                                  </Badge>
-                                ))
-                              ) : project.category && (
+                                project.categories
+                                  .filter(category => category.toLowerCase() !== 'uncategorized')
+                                  .map((category, index) => (
+                                    <Badge key={index} color="violet" variant="light" size="sm">
+                                      {category}
+                                    </Badge>
+                                  ))
+                              ) : project.category && project.category.toLowerCase() !== 'uncategorized' && (
                                 <Badge color="violet" variant="light" size="sm">
                                   {project.category}
                                 </Badge>
@@ -253,17 +277,24 @@ export function ProjectsExplorer({ onCreateAppClick, onEditProject, authState, r
                             </Group>
                           </Group>
                           
-                          {project.githubUrl && (
+                          {project.productionUrl && (
                             <Text 
                               size="xs" 
                               c="violet.6" 
                               mb="sm" 
                               style={{ 
                                 fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Inconsolata, "Roboto Mono", "Droid Sans Mono", "Liberation Mono", Consolas, "Courier New", monospace',
-                                opacity: 0.8
+                                opacity: 0.8,
+                                cursor: 'pointer',
+                                textDecoration: 'none'
                               }}
+                              component="a"
+                              href={project.productionUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              {project.githubUrl.replace('https://', '').replace('http://', '')}
+                              {project.productionUrl.replace('https://', '').replace('http://', '')}
                             </Text>
                           )}
                           
