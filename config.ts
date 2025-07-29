@@ -17,7 +17,7 @@ export const appConfig = {
   defaultProjectId: "basebase_platform",
 
   /** Application URL (update for production) */
-  url: "https://basebase.ai",
+  url: "https://www.basebase.ai",
 
   /** Additional metadata */
   metadata: {
