@@ -71,6 +71,7 @@ export default function HomePage() {
   const [projectName, setProjectName] = useState('');
   const [projectId, setProjectId] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
+  const [projectCategories, setProjectCategories] = useState('');
   const [refreshProjects, setRefreshProjects] = useState(0);
 
   useEffect(() => {
@@ -116,6 +117,7 @@ export default function HomePage() {
     setProjectName('');
     setProjectId('');
     setProjectDescription('');
+    setProjectCategories('');
     setCreateError('');
     setCreateLoading(false);
   };
@@ -130,8 +132,13 @@ export default function HomePage() {
   };
 
   const handleCreateAppClick = () => {
-    setShowCreateModal(true);
-    setCreateError('');
+    if (!authState.isAuthenticated) {
+      setShowAuthModal(true);
+      setError('');
+    } else {
+      setShowCreateModal(true);
+      setCreateError('');
+    }
   };
 
   const handleRequestCode = async () => {
@@ -200,11 +207,25 @@ export default function HomePage() {
     setCreateError('');
 
     try {
+      // Parse categories from comma-separated string to array
+      const categoriesArray = projectCategories
+        .split(',')
+        .map(cat => cat.trim())
+        .filter(cat => cat.length > 0);
+
       // TODO: Fix the API call - need to check basebase-js documentation for correct setDoc usage
       // The doc function signature appears to be different than expected
       // const projectsRef = collection(db, 'basebase/projects');
       // const docRef = doc(projectsRef, projectId);
-      // await setDoc(docRef, { ... });
+      // await setDoc(docRef, {
+      //   name: projectName.trim(),
+      //   description: projectDescription.trim(),
+      //   categories: categoriesArray,
+      //   createdAt: new Date(),
+      //   updatedAt: new Date(),
+      //   users: 0,
+      //   forks: 0
+      // });
       
       // Temporary mock success for UI testing
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -534,6 +555,13 @@ export default function HomePage() {
             required
             minRows={3}
             description="A brief description of your app's purpose"
+          />
+          <TextInput
+            label="Categories"
+            placeholder="social, productivity, games"
+            value={projectCategories}
+            onChange={(event) => setProjectCategories(event.currentTarget.value)}
+            description="Comma-separated list of categories (e.g. social, productivity, games)"
           />
           {createError && (
             <Alert color="red" variant="light">

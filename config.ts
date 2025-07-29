@@ -14,7 +14,7 @@ export const appConfig = {
     "A powerful new platform where communities can develop real production apps by vibe coding together, in real time.",
 
   /** Default project ID for authentication (can be overridden by users) */
-  defaultProjectId: "basebase_platform",
+  defaultProjectId: "basebase",
 
   /** Application URL (update for production) */
   url: "https://www.basebase.ai",

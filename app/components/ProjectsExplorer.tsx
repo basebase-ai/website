@@ -25,6 +25,7 @@ interface Project {
   id: string;
   name: string;
   description: string;
+  githubUrl?: string;
   users?: number;
   posts?: number;
   polls?: number;
@@ -34,6 +35,7 @@ interface Project {
   reviews?: number;
   forks?: number;
   category?: string;
+  categories?: string[];
   // Add flexibility for any additional fields that might come from basebase
   [key: string]: any;
 }
@@ -76,6 +78,7 @@ export function ProjectsExplorer({ onCreateAppClick, refreshTrigger }: ProjectsE
           id: doc.id,
           name: data.name || doc.id,
           description: data.description || 'No description available',
+          githubUrl: data.githubUrl || data.github_url,
           users: data.users || 0,
           posts: data.posts,
           polls: data.polls,
@@ -85,6 +88,7 @@ export function ProjectsExplorer({ onCreateAppClick, refreshTrigger }: ProjectsE
           reviews: data.reviews,
           forks: data.forks || 0,
           category: data.category || 'Uncategorized',
+          categories: data.categories || [],
           ...data // Include any additional fields
         });
       });
@@ -101,7 +105,8 @@ export function ProjectsExplorer({ onCreateAppClick, refreshTrigger }: ProjectsE
   const filteredProjects = projects.filter(project =>
     project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (project.category && project.category.toLowerCase().includes(searchQuery.toLowerCase()))
+    (project.category && project.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (project.categories && project.categories.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase())))
   );
 
   const getStatIcon = (project: Project) => {
@@ -204,12 +209,34 @@ export function ProjectsExplorer({ onCreateAppClick, refreshTrigger }: ProjectsE
                             <Title order={4} size="h3">
                               {project.name}
                             </Title>
-                            {project.category && (
-                              <Badge color="violet" variant="light" size="sm">
-                                {project.category}
-                              </Badge>
-                            )}
+                            <Group gap="xs">
+                              {project.categories && project.categories.length > 0 ? (
+                                project.categories.map((category, index) => (
+                                  <Badge key={index} color="violet" variant="light" size="sm">
+                                    {category}
+                                  </Badge>
+                                ))
+                              ) : project.category && (
+                                <Badge color="violet" variant="light" size="sm">
+                                  {project.category}
+                                </Badge>
+                              )}
+                            </Group>
                           </Group>
+                          
+                          {project.githubUrl && (
+                            <Text 
+                              size="xs" 
+                              c="violet.6" 
+                              mb="sm" 
+                              style={{ 
+                                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Inconsolata, "Roboto Mono", "Droid Sans Mono", "Liberation Mono", Consolas, "Courier New", monospace',
+                                opacity: 0.8
+                              }}
+                            >
+                              {project.githubUrl.replace('https://', '').replace('http://', '')}
+                            </Text>
+                          )}
                           
                           <Text size="sm" c="dimmed" mb="md" style={{ lineHeight: 1.5 }}>
                             {project.description}
