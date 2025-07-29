@@ -20,11 +20,20 @@ export const metadata = {
     description: appConfig.description,
     url: appConfig.url,
     type: "website",
+    images: [
+      {
+        url: "/preview.png",
+        width: 1200,
+        height: 630,
+        alt: appConfig.name,
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: appConfig.name,
     description: appConfig.description,
+    images: ["/preview.png"],
   },
 };
 
