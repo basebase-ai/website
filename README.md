@@ -1,5 +1,3 @@
-# Mantine Next Template
+# Basebase Public Website
 
-Get started with the template by clicking `Use this template` button on the top of the page.
-
-[Documentation](https://mantine.dev/guides/next/)
+Provides information about Basebase database and app development tools. Deployed at [https://www.basebase.ai](https://www.basebase.ai).
