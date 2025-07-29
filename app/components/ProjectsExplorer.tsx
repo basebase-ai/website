@@ -38,7 +38,12 @@ interface Project {
   [key: string]: any;
 }
 
-export function ProjectsExplorer() {
+interface ProjectsExplorerProps {
+  onCreateAppClick?: () => void;
+  refreshTrigger?: number;
+}
+
+export function ProjectsExplorer({ onCreateAppClick, refreshTrigger }: ProjectsExplorerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,6 +52,13 @@ export function ProjectsExplorer() {
   useEffect(() => {
     fetchProjects();
   }, []);
+
+  // Refresh projects when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger && refreshTrigger > 0) {
+      fetchProjects();
+    }
+  }, [refreshTrigger]);
 
   const fetchProjects = async () => {
     try {
@@ -136,7 +148,7 @@ export function ProjectsExplorer() {
                 radius="xl"
                 style={{ flex: 1 }}
               />
-              <Button size="lg" radius="xl">
+              <Button size="lg" radius="xl" onClick={onCreateAppClick}>
                 Create App
               </Button>
             </Group>
