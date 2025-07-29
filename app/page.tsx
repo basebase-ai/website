@@ -72,7 +72,13 @@ export default function HomePage() {
   const [projectId, setProjectId] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [projectCategories, setProjectCategories] = useState('');
+  const [githubUrl, setGithubUrl] = useState('');
+  const [productionUrl, setProductionUrl] = useState('');
   const [refreshProjects, setRefreshProjects] = useState(0);
+  
+  // Edit mode states
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingProject, setEditingProject] = useState<string | null>(null);
 
   useEffect(() => {
     const initialAuthState = getAuthState();
@@ -118,8 +124,12 @@ export default function HomePage() {
     setProjectId('');
     setProjectDescription('');
     setProjectCategories('');
+    setGithubUrl('');
+    setProductionUrl('');
     setCreateError('');
     setCreateLoading(false);
+    setIsEditMode(false);
+    setEditingProject(null);
   };
 
   const handleAuthClick = () => {
@@ -192,6 +202,23 @@ export default function HomePage() {
     }
   };
 
+  const handleEditProject = (project: any) => {
+    setIsEditMode(true);
+    setEditingProject(project.id);
+    setProjectName(project.name || '');
+    setProjectId(project.id || '');
+    setProjectDescription(project.description || '');
+    setProjectCategories(
+      project.categories 
+        ? project.categories.join(', ') 
+        : project.category || ''
+    );
+    setGithubUrl(project.githubUrl || '');
+    setProductionUrl(project.productionUrl || '');
+    setShowCreateModal(true);
+    setCreateError('');
+  };
+
   const handleCreateProject = async () => {
     if (!projectName.trim() || !projectId.trim() || !projectDescription.trim()) {
       setCreateError('Please fill in all fields');
@@ -213,22 +240,31 @@ export default function HomePage() {
         .map(cat => cat.trim())
         .filter(cat => cat.length > 0);
 
-      // TODO: Fix the API call - need to check basebase-js documentation for correct setDoc usage
-      // The doc function signature appears to be different than expected
-      // const projectsRef = collection(db, 'basebase/projects');
-      // const docRef = doc(projectsRef, projectId);
-      // await setDoc(docRef, {
-      //   name: projectName.trim(),
-      //   description: projectDescription.trim(),
-      //   categories: categoriesArray,
-      //   createdAt: new Date(),
-      //   updatedAt: new Date(),
-      //   users: 0,
-      //   forks: 0
-      // });
-      
-      // Temporary mock success for UI testing
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const projectData = {
+        name: projectName.trim(),
+        description: projectDescription.trim(),
+        categories: categoriesArray,
+        updatedAt: new Date(),
+        users: 0,
+        forks: 0,
+        ...(isEditMode ? {
+          githubUrl: githubUrl.trim(),
+          productionUrl: productionUrl.trim()
+        } : { 
+          createdAt: new Date(),
+          ownerId: authState.user?.id || '' 
+        })
+      };
+
+      if (isEditMode && editingProject) {
+        // Update existing project
+        const docRef = doc(db, `basebase/projects/${editingProject}`);
+        await setDoc(docRef, projectData);
+      } else {
+        // Create new project
+        const docRef = doc(db, `basebase/projects/${projectId}`);
+        await setDoc(docRef, projectData);
+      }
       
       // Success - close modal and refresh projects
       setShowCreateModal(false);
@@ -431,6 +467,8 @@ export default function HomePage() {
       {/* Projects Explorer */}
       <ProjectsExplorer 
         onCreateAppClick={handleCreateAppClick}
+        onEditProject={handleEditProject}
+        authState={authState}
         refreshTrigger={refreshProjects}
       />
 
@@ -526,7 +564,7 @@ export default function HomePage() {
       <Modal
         opened={showCreateModal}
         onClose={handleCloseCreateModal}
-        title="Create New App"
+        title={isEditMode ? "Edit App" : "Create New App"}
         centered
         size="md"
       >
@@ -545,7 +583,8 @@ export default function HomePage() {
             value={projectId}
             onChange={(event) => setProjectId(event.currentTarget.value)}
             required
-            description="Auto-generated from name. Lowercase letters, numbers, and hyphens only"
+            disabled={isEditMode}
+            description={isEditMode ? "Project ID cannot be changed" : "Auto-generated from name. Lowercase letters, numbers, and hyphens only"}
           />
           <Textarea
             label="Description"
@@ -563,6 +602,24 @@ export default function HomePage() {
             onChange={(event) => setProjectCategories(event.currentTarget.value)}
             description="Comma-separated list of categories (e.g. social, productivity, games)"
           />
+          {isEditMode && (
+            <>
+              <TextInput
+                label="GitHub URL"
+                placeholder="https://github.com/username/repo"
+                value={githubUrl}
+                onChange={(event) => setGithubUrl(event.currentTarget.value)}
+                description="Link to the project's GitHub repository"
+              />
+              <TextInput
+                label="Production URL"
+                placeholder="https://myapp.com"
+                value={productionUrl}
+                onChange={(event) => setProductionUrl(event.currentTarget.value)}
+                description="Link to the live/production version of the app"
+              />
+            </>
+          )}
           {createError && (
             <Alert color="red" variant="light">
               {createError}
@@ -577,15 +634,9 @@ export default function HomePage() {
               loading={createLoading}
               disabled={!projectName.trim() || !projectId.trim() || !projectDescription.trim()}
             >
-              Create
+              {isEditMode ? "Save" : "Create"}
             </Button>
           </Group>
-          
-          {createLoading && (
-            <Center>
-              <Loader size="sm" />
-            </Center>
-          )}
         </Stack>
       </Modal>
     </>

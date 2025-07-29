@@ -18,7 +18,7 @@ import {
   Center,
   Alert,
 } from '@mantine/core';
-import { IconSearch, IconUsers, IconFileText, IconStar, IconBrandGithub, IconEdit, IconUsersGroup, IconGitFork, IconAlertCircle } from '@tabler/icons-react';
+import { IconSearch, IconUsers, IconFileText, IconStar, IconBrandGithub, IconEdit, IconUsersGroup, IconGitFork, IconAlertCircle, IconSettings } from '@tabler/icons-react';
 import { db, collection, getDocs } from 'basebase-js';
 
 interface Project {
@@ -36,16 +36,26 @@ interface Project {
   forks?: number;
   category?: string;
   categories?: string[];
+  ownerId?: string;
   // Add flexibility for any additional fields that might come from basebase
   [key: string]: any;
 }
 
+interface AuthState {
+  isAuthenticated: boolean;
+  user: { id: string; [key: string]: any } | null;
+  project: any;
+  token: string | null;
+}
+
 interface ProjectsExplorerProps {
   onCreateAppClick?: () => void;
+  onEditProject?: (project: Project) => void;
+  authState?: AuthState;
   refreshTrigger?: number;
 }
 
-export function ProjectsExplorer({ onCreateAppClick, refreshTrigger }: ProjectsExplorerProps) {
+export function ProjectsExplorer({ onCreateAppClick, onEditProject, authState, refreshTrigger }: ProjectsExplorerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,6 +99,7 @@ export function ProjectsExplorer({ onCreateAppClick, refreshTrigger }: ProjectsE
           forks: data.forks || 0,
           category: data.category || 'Uncategorized',
           categories: data.categories || [],
+          ownerId: data.ownerId,
           ...data // Include any additional fields
         });
       });
@@ -206,9 +217,27 @@ export function ProjectsExplorer({ onCreateAppClick, refreshTrigger }: ProjectsE
                       <Stack justify="space-between" h="100%">
                         <Box>
                           <Group justify="space-between" mb="xs">
-                            <Title order={4} size="h3">
-                              {project.name}
-                            </Title>
+                            <Group gap="xs" align="center">
+                              <Title order={4} size="h3">
+                                {project.name}
+                              </Title>
+                              {authState?.isAuthenticated && 
+                               authState.user?.id === project.ownerId && 
+                               onEditProject && (
+                                <Button
+                                  variant="subtle"
+                                  size="xs"
+                                  p={0}
+                                  style={{ width: rem(20), height: rem(20) }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEditProject(project);
+                                  }}
+                                >
+                                  <IconSettings size={14} />
+                                </Button>
+                              )}
+                            </Group>
                             <Group gap="xs">
                               {project.categories && project.categories.length > 0 ? (
                                 project.categories.map((category, index) => (
@@ -286,14 +315,26 @@ export function ProjectsExplorer({ onCreateAppClick, refreshTrigger }: ProjectsE
                               radius="md"
                               size="sm"
                               style={{ flex: 1 }}
+                              onClick={() => {
+                                if (project.productionUrl) {
+                                  window.open(project.productionUrl, '_blank');
+                                }
+                              }}
+                              disabled={!project.productionUrl}
                             >
-                              Try App
+                              Go To App
                             </Button>
                             <Button 
                               variant="outline" 
                               size="sm"
                               radius="md"
                               style={{ width: rem(40), height: rem(32), padding: 0, flexShrink: 0 }}
+                              onClick={() => {
+                                if (project.githubUrl) {
+                                  window.open(project.githubUrl, '_blank');
+                                }
+                              }}
+                              disabled={!project.githubUrl}
                             >
                               <IconBrandGithub size={16} />
                             </Button>
