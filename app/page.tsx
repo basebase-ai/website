@@ -21,6 +21,7 @@ import {
   Center,
   Paper,
   Textarea,
+  Badge,
 } from '@mantine/core';
 import {
   IconRocket,
@@ -29,6 +30,9 @@ import {
   IconWorld,
   IconArrowRight,
   IconCheck,
+  IconBrandGithub,
+  IconExternalLink,
+  IconLoader,
 } from '@tabler/icons-react';
 import {
   getAuthState,
@@ -41,6 +45,9 @@ import {
   collection,
   doc,
   setDoc,
+  createProject,
+  createRepository,
+  createService,
 } from 'basebase-js';
 import { appConfig } from '../config';
 import { Navigation } from './components/Navigation';
@@ -68,12 +75,17 @@ export default function HomePage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState<string>('');
+  const [createProgress, setCreateProgress] = useState<string>('');
+  const [createSuccess, setCreateSuccess] = useState(false);
+  const [createdProjectUrls, setCreatedProjectUrls] = useState<{
+    editorUrl: string;
+    githubUrl: string;
+    deploymentUrl: string;
+  } | null>(null);
   const [projectName, setProjectName] = useState('');
   const [projectId, setProjectId] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [projectCategories, setProjectCategories] = useState('');
-  const [githubUrl, setGithubUrl] = useState('');
-  const [productionUrl, setProductionUrl] = useState('');
   const [refreshProjects, setRefreshProjects] = useState(0);
   
   // Edit mode states
@@ -124,10 +136,11 @@ export default function HomePage() {
     setProjectId('');
     setProjectDescription('');
     setProjectCategories('');
-    setGithubUrl('');
-    setProductionUrl('');
     setCreateError('');
     setCreateLoading(false);
+    setCreateProgress('');
+    setCreateSuccess(false);
+    setCreatedProjectUrls(null);
     setIsEditMode(false);
     setEditingProject(null);
   };
@@ -213,8 +226,6 @@ export default function HomePage() {
         ? project.categories.join(', ') 
         : project.category || ''
     );
-    setGithubUrl(project.githubUrl || '');
-    setProductionUrl(project.productionUrl || '');
     setShowCreateModal(true);
     setCreateError('');
   };
@@ -232,6 +243,7 @@ export default function HomePage() {
 
     setCreateLoading(true);
     setCreateError('');
+    setCreateProgress('');
 
     try {
       // Parse categories from comma-separated string to array
@@ -240,44 +252,75 @@ export default function HomePage() {
         .map(cat => cat.trim())
         .filter(cat => cat.length > 0);
 
-      const projectData = {
+      if (isEditMode && editingProject) {
+        // Handle edit mode - just update the existing project document
+        setCreateProgress('Updating project information...');
+        
+        const projectData = {
+          name: projectName.trim(),
+          description: projectDescription.trim(),
+          categories: categoriesArray,
+          updatedAt: new Date(),
+        };
+
+        const docRef = doc(db, `basebase/projects/${editingProject}`);
+        await setDoc(docRef, projectData);
+        
+        setShowCreateModal(false);
+        resetCreateForm();
+        setRefreshProjects(prev => prev + 1);
+        return;
+      }
+
+      // Create new project using the three-step process
+      setCreateProgress('Creating project document...');
+      
+      const projectResult = await createProject({
+        projectId: projectId.trim(),
         name: projectName.trim(),
         description: projectDescription.trim(),
         categories: categoriesArray,
-        githubUrl: githubUrl.trim(),
-        productionUrl: productionUrl.trim(),
-        updatedAt: new Date(),
-        users: 0,
-        forks: 0,
-        ...(isEditMode ? {} : { 
-          createdAt: new Date(),
-          ownerId: authState.user?.id || '' 
-        })
-      };
+      });
 
-      // Debug logging for project creation/update
-      console.log('Creating/updating project with data:', projectData);
-      console.log('isEditMode:', isEditMode);
-      console.log('projectId:', projectId);
-
-      if (isEditMode && editingProject) {
-        // Update existing project
-        const docRef = doc(db, `basebase/projects/${editingProject}`);
-        await setDoc(docRef, projectData);
-        console.log('Project updated successfully:', editingProject);
-      } else {
-        // Create new project
-        const docRef = doc(db, `basebase/projects/${projectId}`);
-        await setDoc(docRef, projectData);
-        console.log('New project created successfully:', projectId);
+      if (!projectResult.success) {
+        throw new Error('Failed to create project document');
       }
+
+      setCreateProgress('Setting up GitHub repository...');
       
-      // Success - close modal and refresh projects
-      setShowCreateModal(false);
-      resetCreateForm();
-      setRefreshProjects(prev => prev + 1); // Trigger refresh in ProjectsExplorer
+      const repositoryResult = await createRepository({
+        projectId: projectId.trim(),
+      });
+
+      if (!repositoryResult.success) {
+        throw new Error('Failed to create repository');
+      }
+
+      setCreateProgress('Deploying service...');
+      
+      const serviceResult = await createService({
+        projectId: projectId.trim(),
+      });
+
+      if (!serviceResult.success) {
+        throw new Error('Failed to deploy service');
+      }
+
+      setCreateProgress('Project created successfully!');
+      
+      // Set success state and URLs
+      setCreateSuccess(true);
+      setCreatedProjectUrls({
+        editorUrl: `https://editor.basebase.ai/${projectId.trim()}`,
+        githubUrl: repositoryResult.repository.url,
+        deploymentUrl: serviceResult.service.deploymentUrl,
+      });
+      
+      setCreateLoading(false);
+      
     } catch (err: any) {
-      if (err.code === 'permission-denied' || err.message?.includes('already exists')) {
+      console.error('Project creation error:', err);
+      if (err.message?.includes('already exists') || err.message?.includes('duplicate')) {
         setCreateError('The ID you selected is already taken, please try again with a different ID');
       } else {
         setCreateError(err.message || 'Failed to create project');
@@ -320,8 +363,8 @@ export default function HomePage() {
     },
     {
       icon: IconRocket,
-      title: 'Launch with Users',
-      description: 'Access live databases shared by other apps from day one. Start with an existing community instead of building from zero.',
+      title: 'One Shared Database',
+      description: 'Build your app on a live database shared by other apps from day one. Start with an existing community instead of building from zero.',
     },
     {
       icon: IconRefresh,
@@ -376,8 +419,8 @@ export default function HomePage() {
               Vibe together.
             </Title>
             
-            <Text size="xl" c="dimmed" maw={600} style={{ lineHeight: 1.5 }}>
-              A powerful new platform where communities can develop real production apps by vibe coding together, in real time.
+            <Text size="xl" maw={600} style={{ lineHeight: 1.5 }}>
+              Everyone updating the source code at the same time.<br />What could go right?
             </Text>
 
             <Group gap="md" justify="center">
@@ -579,72 +622,166 @@ export default function HomePage() {
         centered
         size="md"
       >
-        <Stack gap="md">
-          <TextInput
-            label="Name"
-            placeholder="My Awesome App"
-            value={projectName}
-            onChange={(event) => setProjectName(event.currentTarget.value)}
-            required
-            description="The display name for your app"
-          />
-          <TextInput
-            label="ID"
-            placeholder="my-awesome-app"
-            value={projectId}
-            onChange={(event) => setProjectId(event.currentTarget.value)}
-            required
-            disabled={isEditMode}
-            description={isEditMode ? "Project ID cannot be changed" : "Auto-generated from name. Lowercase letters, numbers, and hyphens only"}
-          />
-          <Textarea
-            label="Description"
-            placeholder="Describe what your app does..."
-            value={projectDescription}
-            onChange={(event) => setProjectDescription(event.currentTarget.value)}
-            required
-            minRows={3}
-            description="A brief description of your app's purpose"
-          />
-          <TextInput
-            label="Categories"
-            placeholder="social, productivity, games"
-            value={projectCategories}
-            onChange={(event) => setProjectCategories(event.currentTarget.value)}
-            description="Comma-separated list of categories (e.g. social, productivity, games)"
-          />
-          <TextInput
-            label="GitHub URL"
-            placeholder="https://github.com/username/repo"
-            value={githubUrl}
-            onChange={(event) => setGithubUrl(event.currentTarget.value)}
-            description="Link to the project's GitHub repository (optional)"
-          />
-          <TextInput
-            label="Production URL"
-            placeholder="https://myapp.com"
-            value={productionUrl}
-            onChange={(event) => setProductionUrl(event.currentTarget.value)}
-            description="Link to the live/production version of the app (optional)"
-          />
-          {createError && (
-            <Alert color="red" variant="light">
-              {createError}
+        {createSuccess && createdProjectUrls ? (
+          <Stack gap="lg">
+            <Alert color="green" variant="light" icon={<IconCheck size={16} />}>
+              <Text fw={600} size="lg">Your new app is ready!</Text>
             </Alert>
-          )}
-          <Group justify="apart">
-            <Button variant="outline" onClick={handleCloseCreateModal}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleCreateProject} 
-              loading={createLoading}
-              disabled={!projectName.trim() || !projectId.trim() || !projectDescription.trim()}
-            >
-              {isEditMode ? "Save" : "Create"}
-            </Button>
-          </Group>
-        </Stack>
+            
+            <Card padding="lg" radius="lg" style={{ 
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}>
+              <Stack gap="md">
+                <Group justify="space-between" align="flex-start">
+                  <Title order={4} size="h3">
+                    {projectName}
+                  </Title>
+                  <Badge color="green" variant="light" size="sm">
+                    Ready
+                  </Badge>
+                </Group>
+                
+                <Text size="sm" c="dimmed" style={{ lineHeight: 1.5 }}>
+                  {projectDescription}
+                </Text>
+                
+                <Button 
+                  size="lg"
+                  radius="md"
+                  rightSection={<IconExternalLink size={16} />}
+                  onClick={() => window.open(createdProjectUrls.editorUrl, '_blank')}
+                  style={{ width: '100%' }}
+                >
+                  Start Editing
+                </Button>
+                
+                <Stack gap="xs">
+                  <Group gap="xs" align="center">
+                    <IconBrandGithub size={16} />
+                    <Text size="sm" c="dimmed">GitHub repository:</Text>
+                  </Group>
+                  <Text 
+                    size="xs" 
+                    c="violet.6" 
+                    style={{ 
+                      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Inconsolata, "Roboto Mono", "Droid Sans Mono", "Liberation Mono", Consolas, "Courier New", monospace',
+                      opacity: 0.8,
+                      cursor: 'pointer',
+                      textDecoration: 'none'
+                    }}
+                    component="a"
+                    href={createdProjectUrls.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {createdProjectUrls.githubUrl.replace('https://', '').replace('http://', '')}
+                  </Text>
+                </Stack>
+                
+                <Stack gap="xs">
+                  <Group gap="xs" align="center">
+                    <IconLoader size={16} />
+                    <Text size="sm" c="dimmed">Deployment (in progress):</Text>
+                  </Group>
+                  <Text 
+                    size="xs" 
+                    c="violet.6" 
+                    style={{ 
+                      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Inconsolata, "Roboto Mono", "Droid Sans Mono", "Liberation Mono", Consolas, "Courier New", monospace',
+                      opacity: 0.8,
+                      cursor: 'pointer',
+                      textDecoration: 'none'
+                    }}
+                    component="a"
+                    href={createdProjectUrls.deploymentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {createdProjectUrls.deploymentUrl.replace('https://', '').replace('http://', '')}
+                  </Text>
+                  <Text size="xs" c="dimmed">May take up to 3 minutes to deploy</Text>
+                </Stack>
+              </Stack>
+            </Card>
+            
+            <Group justify="center">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowCreateModal(false);
+                  resetCreateForm();
+                  setRefreshProjects(prev => prev + 1);
+                }}
+              >
+                Close
+              </Button>
+            </Group>
+          </Stack>
+        ) : (
+          <Stack gap="md">
+            <TextInput
+              label="Name"
+              placeholder="My Awesome App"
+              value={projectName}
+              onChange={(event) => setProjectName(event.currentTarget.value)}
+              required
+              description="The display name for your app"
+            />
+            <TextInput
+              label="ID"
+              placeholder="my-awesome-app"
+              value={projectId}
+              onChange={(event) => setProjectId(event.currentTarget.value)}
+              required
+              disabled={isEditMode}
+              description={isEditMode ? "Project ID cannot be changed" : "Auto-generated from name. Lowercase letters, numbers, and hyphens only"}
+            />
+            <Textarea
+              label="Description"
+              placeholder="Describe what your app does..."
+              value={projectDescription}
+              onChange={(event) => setProjectDescription(event.currentTarget.value)}
+              required
+              minRows={3}
+              description="A brief description of your app's purpose"
+            />
+            <TextInput
+              label="Categories"
+              placeholder="social, productivity, games"
+              value={projectCategories}
+              onChange={(event) => setProjectCategories(event.currentTarget.value)}
+              description="Comma-separated list of categories (e.g. social, productivity, games)"
+            />
+            {createError && (
+              <Alert color="red" variant="light">
+                {createError}
+              </Alert>
+            )}
+            {createLoading && createProgress && (
+              <Alert color="blue" variant="light">
+                <Center>
+                  <Stack gap="xs" align="center">
+                    <Loader size="sm" />
+                    <Text size="sm">{createProgress}</Text>
+                  </Stack>
+                </Center>
+              </Alert>
+            )}
+            <Group justify="apart">
+              <Button variant="outline" onClick={handleCloseCreateModal} disabled={createLoading}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleCreateProject} 
+                loading={createLoading}
+                disabled={!projectName.trim() || !projectId.trim() || !projectDescription.trim()}
+              >
+                {isEditMode ? "Save" : "Create"}
+              </Button>
+            </Group>
+          </Stack>
+        )}
       </Modal>
     </>
   );
