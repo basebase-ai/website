@@ -374,6 +374,13 @@ export function ProjectsExplorer({ onCreateAppClick, onEditProject, authState, r
                               size="sm"
                               radius="md"
                               style={{ width: rem(40), height: rem(32), padding: 0, flexShrink: 0 }}
+                              onClick={() => {
+                                if (authState?.token && project.githubUrl) {
+                                  const editorUrl = `https://editor.basebase.ai/${project.id}?repo=${encodeURIComponent(project.githubUrl)}&token=${authState.token}`;
+                                  window.open(editorUrl, '_blank');
+                                }
+                              }}
+                              disabled={!authState?.token || !project.githubUrl}
                             >
                               <IconEdit size={16} />
                             </Button>

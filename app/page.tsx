@@ -650,7 +650,13 @@ export default function HomePage() {
                   size="lg"
                   radius="md"
                   rightSection={<IconExternalLink size={16} />}
-                  onClick={() => window.open(createdProjectUrls.editorUrl, '_blank')}
+                  onClick={() => {
+                    if (authState?.token && createdProjectUrls?.githubUrl) {
+                      const editorUrl = `https://editor.basebase.ai/${projectId.trim()}?repo=${encodeURIComponent(createdProjectUrls.githubUrl)}&token=${authState.token}`;
+                      window.open(editorUrl, '_blank');
+                    }
+                  }}
+                  disabled={!authState?.token || !createdProjectUrls?.githubUrl}
                   style={{ width: '100%' }}
                 >
                   Start Editing
